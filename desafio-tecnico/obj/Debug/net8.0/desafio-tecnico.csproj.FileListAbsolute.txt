@@ -29,3 +29,10 @@
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/ref/desafio-tecnico.dll
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/desafio-tecnico.sourcelink.json
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/scopedcss/Views/Shared/_Layout.cshtml.rz.scp.css
+/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/desafio-tecnico.csproj.AssemblyReference.cache
+/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/desafio-tecnico.MvcApplicationPartsAssemblyInfo.cs
+/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/bin/Debug/net8.0/Microsoft.OpenApi.dll
+/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/bin/Debug/net8.0/Swashbuckle.AspNetCore.Swagger.dll
+/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerGen.dll
+/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerUI.dll
+/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/desafio-.EE9D0ACF.Up2Date

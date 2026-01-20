@@ -18,16 +18,16 @@ build_property.GenerateRazorMetadataSourceChecksumAttributes =
 build_property.MSBuildProjectDirectory = /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico
 build_property._RazorSourceGeneratorDebug = 
 
-[/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/Views/Error.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRXJyb3IuY3NodG1s
+[/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/Views/Home/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9FcnJvci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/Views/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSW5kZXguY3NodG1s
+[/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/Views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/Views/Privacy.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUHJpdmFjeS5jc2h0bWw=
+[/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/Views/Home/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Qcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/Views/Shared/_ValidationScriptsPartial.cshtml]
