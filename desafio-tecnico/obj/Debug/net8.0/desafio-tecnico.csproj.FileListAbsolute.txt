@@ -20,7 +20,6 @@
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.desafio-tecnico.props
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.desafio-tecnico.props
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/staticwebassets.pack.json
-/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/scopedcss/Pages/Shared/_Layout.cshtml.rz.scp.css
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/scopedcss/bundle/desafio-tecnico.styles.css
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/scopedcss/projectbundle/desafio-tecnico.bundle.scp.css
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/desafio-tecnico.dll
@@ -28,3 +27,5 @@
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/desafio-tecnico.pdb
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/desafio-tecnico.genruntimeconfig.cache
 /Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/ref/desafio-tecnico.dll
+/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/desafio-tecnico.sourcelink.json
+/Users/theofurtado/Desktop/sideprojects/desafio-tecnico-.net-razor-fullstack/desafio-tecnico/obj/Debug/net8.0/scopedcss/Views/Shared/_Layout.cshtml.rz.scp.css
