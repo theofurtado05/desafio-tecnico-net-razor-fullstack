@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using desafio_tecnico.Data;
+using desafio_tecnico.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,10 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Registrar services
+builder.Services.AddScoped<IDepartamentService, DepartamentService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 
 var app = builder.Build();
 

@@ -64,7 +64,13 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Departament>(entity =>
         {
-            entity.ToTable("departaments");
+            entity.ToTable("departaments", t =>
+            {
+                // higher_departament_id não pode ser igual a id
+                t.HasCheckConstraint(
+                    "chk_higher_departament_not_self",
+                    "higher_departament_id IS NULL OR higher_departament_id <> id");
+            });
 
             entity.HasKey(d => d.Id);
             entity.Property(d => d.Id).HasColumnName("id");
@@ -93,10 +99,10 @@ public class ApplicationDbContext : DbContext
                 .IsRequired()
                 .HasDefaultValueSql("NOW()");
 
-            // FK para gerente (employee)
+            // FK para gerente (employee) - um colaborador só pode ser gerente de um departamento
             entity.HasOne(d => d.Manager)
-                .WithMany(e => e.ManagedDepartaments)
-                .HasForeignKey(d => d.ManagerId)
+                .WithOne(e => e.ManagedDepartament)
+                .HasForeignKey<Departament>(d => d.ManagerId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             // FK para departamento superior
@@ -104,11 +110,6 @@ public class ApplicationDbContext : DbContext
                 .WithMany(d => d.SubDepartaments)
                 .HasForeignKey(d => d.HigherDepartamentId)
                 .OnDelete(DeleteBehavior.SetNull);
-
-            // higher_departament_id não pode ser igual a id
-            entity.HasCheckConstraint(
-                "chk_higher_departament_not_self",
-                "higher_departament_id IS NULL OR higher_departament_id <> id");
         });
     }
 }

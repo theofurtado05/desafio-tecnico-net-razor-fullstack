@@ -29,8 +29,8 @@ public class Employee
     [ForeignKey("DepartmentId")]
     public virtual Departament? Departament { get; set; }
 
-    // departamentos onde esse funcionario é gerente
-    public virtual ICollection<Departament> ManagedDepartaments { get; set; } = new List<Departament>();
+    // departamento onde esse funcionario é gerente (um colaborador só pode ser gerente de um departamento)
+    public virtual Departament? ManagedDepartament { get; set; }
 
     [Required]
     [Column(TypeName = "TIMESTAMP")]
