@@ -16,6 +16,15 @@ public class DepartamentService : IDepartamentService
 
     public async Task<Departament?> CreateDepartamentAsync(CreateDepartamentViewModel viewModel)
     {
+        var existingName = await _context.Departaments
+            .FirstOrDefaultAsync(d => d.Name == viewModel.Name);
+
+        if (existingName != null)
+        {
+            throw new InvalidOperationException("Já existe um departamento com este nome.");
+        }
+
+        // Valida se o gerente existe (apenas se informado)
         if (viewModel.ManagerId.HasValue)
         {
             var manager = await _context.Employees
@@ -25,14 +34,12 @@ public class DepartamentService : IDepartamentService
             {
                 throw new InvalidOperationException("O gerente informado não existe.");
             }
-        }
 
-        if (viewModel.ManagerId.HasValue)
-        {
-            var manager = await _context.Departaments
+            // Valida se o gerente já é gerente de outro departamento
+            var existingDepartament = await _context.Departaments
                 .FirstOrDefaultAsync(d => d.ManagerId == viewModel.ManagerId.Value);
             
-            if (manager != null)
+            if (existingDepartament != null)
             {
                 throw new InvalidOperationException("O gerente informado já é gerente de outro departamento.");
             }
@@ -49,13 +56,15 @@ public class DepartamentService : IDepartamentService
             }
         }
 
+        var now = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+        
         var departament = new Departament
         {
             Name = viewModel.Name,
             ManagerId = viewModel.ManagerId,
             HigherDepartamentId = viewModel.HigherDepartamentId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = now,
+            UpdatedAt = now
         };
 
         _context.Departaments.Add(departament);

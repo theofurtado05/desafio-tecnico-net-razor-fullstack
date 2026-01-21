@@ -61,14 +61,16 @@ public class EmployeeService : IEmployeeService
             }
         }
 
+        var now = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+        
         var employee = new Employee
         {
             Name = viewModel.Name,
             CPF = viewModel.CPF,
             Rg = viewModel.Rg,
             DepartmentId = viewModel.DepartmentId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = now,
+            UpdatedAt = now
         };
 
         _context.Employees.Add(employee);
@@ -120,7 +122,7 @@ public class EmployeeService : IEmployeeService
         employee.CPF = viewModel.CPF;
         employee.Rg = viewModel.Rg;
         employee.DepartmentId = viewModel.DepartmentId;
-        employee.UpdatedAt = DateTime.UtcNow;
+        employee.UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
 
         await _context.SaveChangesAsync();
 

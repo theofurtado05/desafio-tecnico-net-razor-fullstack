@@ -33,9 +33,9 @@ public class Departament
 
     [Required]
     [Column("createdAt", TypeName = "TIMESTAMP")]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
 
     [Required]
     [Column("updatedAt", TypeName = "TIMESTAMP")]
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
 }

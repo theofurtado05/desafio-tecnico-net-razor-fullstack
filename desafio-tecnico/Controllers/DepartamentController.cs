@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using desafio_tecnico.Services;
 using desafio_tecnico.ViewModels;
 
@@ -32,6 +33,11 @@ public class DepartamentController : Controller
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<Models.Departament>> CreateApi([FromBody] CreateDepartamentViewModel viewModel)
     {
+        if (viewModel == null)
+        {
+            return BadRequest("O corpo da requisição não pode ser nulo.");
+        }
+
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
@@ -50,12 +56,18 @@ public class DepartamentController : Controller
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            _logger.LogWarning(ex, "Erro de validação ao criar departamento");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Erro de banco de dados ao criar departamento");
+            return BadRequest(new { message = "Erro ao salvar no banco de dados. Verifique se os dados estão corretos." });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao criar departamento via API");
-            return StatusCode(500, "Ocorreu um erro ao criar o departamento.");
+            return StatusCode(500, new { message = "Ocorreu um erro ao criar o departamento." });
         }
     }
 
