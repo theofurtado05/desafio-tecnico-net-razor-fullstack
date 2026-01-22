@@ -24,11 +24,15 @@ public class DepartamentService : IDepartamentService
             throw new InvalidOperationException("Já existe um departamento com este nome.");
         }
 
-        
-        if (viewModel.ManagerId.HasValue)
+    
+        int? managerId = viewModel.ManagerId.HasValue && viewModel.ManagerId.Value > 0 
+            ? viewModel.ManagerId.Value 
+            : null;
+
+        if (managerId.HasValue)
         {
             var manager = await _context.Employees
-                .FirstOrDefaultAsync(e => e.Id == viewModel.ManagerId.Value);
+                .FirstOrDefaultAsync(e => e.Id == managerId.Value);
 
             if (manager == null)
             {
@@ -36,7 +40,7 @@ public class DepartamentService : IDepartamentService
             }
 
             var existingDepartament = await _context.Departaments
-                .FirstOrDefaultAsync(d => d.ManagerId == viewModel.ManagerId.Value);
+                .FirstOrDefaultAsync(d => d.ManagerId == managerId.Value);
             
             if (existingDepartament != null)
             {
@@ -60,7 +64,7 @@ public class DepartamentService : IDepartamentService
         var departament = new Departament
         {
             Name = viewModel.Name,
-            ManagerId = viewModel.ManagerId,
+            ManagerId = managerId,
             HigherDepartamentId = viewModel.HigherDepartamentId,
             CreatedAt = now,
             UpdatedAt = now
