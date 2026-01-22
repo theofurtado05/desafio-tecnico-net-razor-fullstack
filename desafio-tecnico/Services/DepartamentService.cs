@@ -197,4 +197,32 @@ public class DepartamentService : IDepartamentService
 
         return employee != null && employee.DepartmentId == departmentId.Value;
     }
+
+    public async Task<bool> DeleteDepartamentAsync(int id)
+    {
+        var departament = await _context.Departaments.FirstOrDefaultAsync(d => d.Id == id && (d.IsDeleted == null || d.IsDeleted == false));
+
+        if(departament == null)
+        {
+            return false;
+        }
+
+        departament.IsDeleted = true;
+        departament.UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+
+        departament.ManagerId = null;
+
+        var employees = await _context.Employees
+            .Where(e => e.DepartmentId == id && (e.IsDeleted == null || e.IsDeleted == false)).ToListAsync();
+        
+
+        foreach(var employee in employees)
+        {
+            employee.DepartmentId = null;
+            employee.UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+        }
+
+        await _context.SaveChangesAsync(); 
+        return true;
+    }
 }

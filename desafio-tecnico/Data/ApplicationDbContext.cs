@@ -41,8 +41,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Rg).IsUnique();
 
             entity.Property(e => e.DepartmentId)
-                .HasColumnName("departament_id")
-                .IsRequired();
+                .HasColumnName("departament_id");
 
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("createdAt")
@@ -55,6 +54,11 @@ public class ApplicationDbContext : DbContext
                 .HasColumnType("TIMESTAMP")
                 .IsRequired()
                 .HasDefaultValueSql("NOW()");
+            
+            entity.Property(e => e.IsDeleted)
+                .HasColumnName("is_deleted")
+                .IsRequired()
+                .HasDefaultValue(false);
 
             entity.HasOne(e => e.Departament)
                 .WithMany(d => d.Employees)
@@ -98,6 +102,11 @@ public class ApplicationDbContext : DbContext
                 .HasColumnType("TIMESTAMP")
                 .IsRequired()
                 .HasDefaultValueSql("NOW()");
+
+            entity.Property(d => d.IsDeleted)
+                .HasColumnName("is_deleted")
+                .IsRequired()
+                .HasDefaultValue(false);
 
             // FK para gerente (employee) - um colaborador só pode ser gerente de um departamento
             entity.HasOne(d => d.Manager)

@@ -38,4 +38,9 @@ public class Departament
     [Required]
     [Column("updatedAt", TypeName = "TIMESTAMP")]
     public DateTime UpdatedAt { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+
+
+    [Required]
+    [Column("is_deleted")]
+    public bool? IsDeleted { get; set; } = false;
 }

@@ -23,8 +23,9 @@ public class Employee
     [Column(TypeName = "VARCHAR(20)")]
     public string? Rg { get; set; } = string.Empty;
 
-    [Required]
-    public int DepartmentId { get; set; }
+
+    [Column("departament_id")]
+    public int? DepartmentId { get; set; }
 
     [ForeignKey("DepartmentId")]
     public virtual Departament? Departament { get; set; }
@@ -40,5 +41,10 @@ public class Employee
     [Column(TypeName = "TIMESTAMP")]
     public DateTime UpdatedAt { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
    
+
+    [Required]
+    [Column("is_deleted")]
+    public bool? IsDeleted { get; set; } = false;
+
 
 }

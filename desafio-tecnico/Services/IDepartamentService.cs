@@ -10,4 +10,6 @@ public interface IDepartamentService
     Task<Departament?> GetDepartamentByIdAsync(int id);
     Task<List<Departament>> GetAllDepartamentsAsync();
     Task<bool> ValidateManagerBelongsToDepartamentAsync(int managerId, int? departmentId);
+
+    Task<bool> DeleteDepartamentAsync(int id);
 }

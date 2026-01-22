@@ -132,4 +132,20 @@ public class DepartamentController : Controller
         }
     }
 
+    [HttpDelete("api/departaments/{id}")]
+    [ApiExplorerSettings(IgnoreApi = false)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<bool>> DeleteApi(int id)
+    {
+        var result = await _departamentService.DeleteDepartamentAsync(id);
+
+        if (!result)
+        {
+            return NotFound();
+        }
+
+        return Ok(result);
+    }
+
 }
