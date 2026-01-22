@@ -17,7 +17,7 @@ public class DepartamentService : IDepartamentService
     public async Task<Departament?> CreateDepartamentAsync(CreateDepartamentViewModel viewModel)
     {
         var existingName = await _context.Departaments
-            .FirstOrDefaultAsync(d => d.Name == viewModel.Name);
+            .FirstOrDefaultAsync(d => d.Name == viewModel.Name && (d.IsDeleted == null || d.IsDeleted == false));
 
         if (existingName != null)
         {
@@ -40,7 +40,7 @@ public class DepartamentService : IDepartamentService
             }
 
             var existingDepartament = await _context.Departaments
-                .FirstOrDefaultAsync(d => d.ManagerId == managerId.Value);
+                .FirstOrDefaultAsync(d => d.ManagerId == managerId.Value && (d.IsDeleted == null || d.IsDeleted == false));
             
             if (existingDepartament != null)
             {
@@ -51,7 +51,7 @@ public class DepartamentService : IDepartamentService
         if (viewModel.HigherDepartamentId.HasValue)
         {
             var higherDepartament = await _context.Departaments
-                .FirstOrDefaultAsync(d => d.Id == viewModel.HigherDepartamentId.Value);
+                .FirstOrDefaultAsync(d => d.Id == viewModel.HigherDepartamentId.Value && (d.IsDeleted == null || d.IsDeleted == false));
 
             if (higherDepartament == null)
             {
@@ -76,7 +76,7 @@ public class DepartamentService : IDepartamentService
         return await _context.Departaments
             .Include(d => d.Manager)
             .Include(d => d.HigherDepartament)
-            .FirstOrDefaultAsync(d => d.Id == departament.Id);
+            .FirstOrDefaultAsync(d => d.Id == departament.Id && (d.IsDeleted == null || d.IsDeleted == false));
     }
 
     /*
@@ -84,7 +84,8 @@ public class DepartamentService : IDepartamentService
     */
     public async Task<Departament?> UpdateDepartamentAsync(int id, CreateDepartamentViewModel viewModel)
     {
-        var departament = await _context.Departaments.FindAsync(id);
+        var departament = await _context.Departaments
+            .FirstOrDefaultAsync(d => d.Id == id && (d.IsDeleted == null || d.IsDeleted == false));
 
         if (departament == null)
         {
@@ -92,7 +93,7 @@ public class DepartamentService : IDepartamentService
         }
 
         var existingName = await _context.Departaments
-            .FirstOrDefaultAsync(d => d.Name == viewModel.Name && d.Id != id);
+            .FirstOrDefaultAsync(d => d.Name == viewModel.Name && d.Id != id && (d.IsDeleted == null || d.IsDeleted == false));
 
         if (existingName != null)
         {
@@ -121,7 +122,7 @@ public class DepartamentService : IDepartamentService
                 }
 
                 var existingDepartament = await _context.Departaments
-                    .FirstOrDefaultAsync(d => d.ManagerId == managerId.Value && d.Id != id);
+                    .FirstOrDefaultAsync(d => d.ManagerId == managerId.Value && d.Id != id && (d.IsDeleted == null || d.IsDeleted == false));
                 
                 if (existingDepartament != null)
                 {
@@ -138,7 +139,7 @@ public class DepartamentService : IDepartamentService
             }
 
             var higherDepartament = await _context.Departaments
-                .FirstOrDefaultAsync(d => d.Id == viewModel.HigherDepartamentId.Value);
+                .FirstOrDefaultAsync(d => d.Id == viewModel.HigherDepartamentId.Value && (d.IsDeleted == null || d.IsDeleted == false));
 
             if (higherDepartament == null)
             {
@@ -156,7 +157,7 @@ public class DepartamentService : IDepartamentService
         return await _context.Departaments
             .Include(d => d.Manager)
             .Include(d => d.HigherDepartament)
-            .FirstOrDefaultAsync(d => d.Id == departament.Id);
+            .FirstOrDefaultAsync(d => d.Id == departament.Id && (d.IsDeleted == null || d.IsDeleted == false));
     }
 
     public async Task<Departament?> GetDepartamentByIdAsync(int id)
@@ -164,7 +165,7 @@ public class DepartamentService : IDepartamentService
         var departament = await _context.Departaments
             .Include(d => d.Manager)
             .Include(d => d.HigherDepartament)
-            .FirstOrDefaultAsync(d => d.Id == id);
+            .FirstOrDefaultAsync(d => d.Id == id && (d.IsDeleted == null || d.IsDeleted == false));
 
         if (departament == null)
         {
@@ -172,7 +173,7 @@ public class DepartamentService : IDepartamentService
         }
 
         var employees = await _context.Employees
-            .Where(e => e.DepartmentId == id)
+            .Where(e => e.DepartmentId == id && (e.IsDeleted == null || e.IsDeleted == false))
             .ToListAsync();
 
         departament.Employees = employees;
@@ -183,6 +184,7 @@ public class DepartamentService : IDepartamentService
     public async Task<List<Departament>> GetAllDepartamentsAsync()
     {
         return await _context.Departaments
+            .Where(d => d.IsDeleted == null || d.IsDeleted == false)
             .OrderBy(d => d.Name)
             .ToListAsync();
     }
