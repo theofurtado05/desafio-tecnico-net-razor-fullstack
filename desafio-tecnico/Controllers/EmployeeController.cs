@@ -112,4 +112,34 @@ public class EmployeeController : Controller
         }
     }
 
+    [HttpDelete("api/employees/{id}")]
+    [ApiExplorerSettings(IgnoreApi = false)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<bool>> DeleteApi(int id)
+    {
+        try
+        {
+            var result = await _employeeService.DeleteEmployeeAsync(id);
+
+            if (!result)
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Erro de validação ao deletar colaborador");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao deletar colaborador via API");
+            return StatusCode(500, new { message = "Ocorreu um erro ao deletar o colaborador." });
+        }
+    }
+
 }

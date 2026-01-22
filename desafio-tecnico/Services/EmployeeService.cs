@@ -17,6 +17,7 @@ public class EmployeeService : IEmployeeService
     public async Task<List<Employee>> GetAllEmployeesAsync()
     {
         var employees = await _context.Employees
+            .Where(e => e.IsDeleted == null || e.IsDeleted == false)
             .Include(e => e.Departament)
             .AsSplitQuery()
             .OrderBy(e => e.Name)
@@ -36,9 +37,10 @@ public class EmployeeService : IEmployeeService
     public async Task<Employee?> GetEmployeeByIdAsync(int id)
     {
         var employee = await _context.Employees
+            .Where(e => e.Id == id && (e.IsDeleted == null || e.IsDeleted == false))
             .Include(e => e.Departament)
             .AsSplitQuery()
-            .FirstOrDefaultAsync(e => e.Id == id);
+            .FirstOrDefaultAsync();
 
         if (employee?.Departament != null)
         {
@@ -51,7 +53,7 @@ public class EmployeeService : IEmployeeService
     public async Task<Employee?> CreateEmployeeAsync(CreateEmployeeViewModel viewModel)
     {
         var departament = await _context.Departaments
-            .FirstOrDefaultAsync(d => d.Id == viewModel.DepartmentId);
+            .FirstOrDefaultAsync(d => d.Id == viewModel.DepartmentId && (d.IsDeleted == null || d.IsDeleted == false));
 
         if (departament == null)
         {
@@ -59,7 +61,7 @@ public class EmployeeService : IEmployeeService
         }
 
         var existingCpf = await _context.Employees
-            .FirstOrDefaultAsync(e => e.CPF == viewModel.CPF);
+            .FirstOrDefaultAsync(e => e.CPF == viewModel.CPF && (e.IsDeleted == null || e.IsDeleted == false));
 
         if (existingCpf != null)
         {
@@ -69,7 +71,7 @@ public class EmployeeService : IEmployeeService
         if (!string.IsNullOrWhiteSpace(viewModel.Rg))
         {
             var existingRg = await _context.Employees
-                .FirstOrDefaultAsync(e => e.Rg == viewModel.Rg);
+                .FirstOrDefaultAsync(e => e.Rg == viewModel.Rg && (e.IsDeleted == null || e.IsDeleted == false));
 
             if (existingRg != null)
             {
@@ -97,7 +99,8 @@ public class EmployeeService : IEmployeeService
 
     public async Task<Employee?> UpdateEmployeeAsync(int id, CreateEmployeeViewModel viewModel)
     {
-        var employee = await _context.Employees.FindAsync(id);
+        var employee = await _context.Employees
+            .FirstOrDefaultAsync(e => e.Id == id && (e.IsDeleted == null || e.IsDeleted == false));
 
         if (employee == null)
         {
@@ -105,7 +108,7 @@ public class EmployeeService : IEmployeeService
         }
 
         var departament = await _context.Departaments
-            .FirstOrDefaultAsync(d => d.Id == viewModel.DepartmentId);
+            .FirstOrDefaultAsync(d => d.Id == viewModel.DepartmentId && (d.IsDeleted == null || d.IsDeleted == false));
 
         if (departament == null)
         {
@@ -113,7 +116,7 @@ public class EmployeeService : IEmployeeService
         }
 
         var existingCpf = await _context.Employees
-            .FirstOrDefaultAsync(e => e.CPF == viewModel.CPF && e.Id != id);
+            .FirstOrDefaultAsync(e => e.CPF == viewModel.CPF && e.Id != id && (e.IsDeleted == null || e.IsDeleted == false));
 
         if (existingCpf != null)
         {
@@ -123,7 +126,7 @@ public class EmployeeService : IEmployeeService
         if (!string.IsNullOrWhiteSpace(viewModel.Rg))
         {
             var existingRg = await _context.Employees
-                .FirstOrDefaultAsync(e => e.Rg == viewModel.Rg && e.Id != id);
+                .FirstOrDefaultAsync(e => e.Rg == viewModel.Rg && e.Id != id && (e.IsDeleted == null || e.IsDeleted == false));
 
             if (existingRg != null)
             {
@@ -144,7 +147,8 @@ public class EmployeeService : IEmployeeService
 
     public async Task<bool> DeleteEmployeeAsync(int id)
     {
-        var employee = await _context.Employees.FindAsync(id);
+        var employee = await _context.Employees
+            .FirstOrDefaultAsync(e => e.Id == id && (e.IsDeleted == null || e.IsDeleted == false));
 
         if (employee == null)
         {
@@ -152,14 +156,16 @@ public class EmployeeService : IEmployeeService
         }
 
         var managedDepartament = await _context.Departaments
-            .FirstOrDefaultAsync(d => d.ManagerId == id);
+            .FirstOrDefaultAsync(d => d.ManagerId == id && (d.IsDeleted == null || d.IsDeleted == false));
 
         if (managedDepartament != null)
         {
             throw new InvalidOperationException("Não é possível excluir um colaborador que é gerente de um departamento. Remova-o como gerente primeiro.");
         }
 
-        _context.Employees.Remove(employee);
+        employee.IsDeleted = true;
+        employee.UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+        
         await _context.SaveChangesAsync();
 
         return true;
