@@ -65,16 +65,16 @@ public class EmployeeController : Controller
                 return CreatedAtAction(nameof(GetById), new { id = employee.Id }, employee);
             }
 
-            return BadRequest("Erro ao criar o colaborador.");
+            return BadRequest(new { message = "Erro ao criar o colaborador." });
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao criar colaborador via API");
-            return StatusCode(500, "Ocorreu um erro ao criar o colaborador.");
+            return StatusCode(500, new { message = "Ocorreu um erro ao criar o colaborador." });
         }
     }
 
@@ -103,12 +103,12 @@ public class EmployeeController : Controller
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao atualizar colaborador via API");
-            return StatusCode(500, "Ocorreu um erro ao atualizar o colaborador.");
+            return StatusCode(500, new { message = "Ocorreu um erro ao atualizar o colaborador." });
         }
     }
 

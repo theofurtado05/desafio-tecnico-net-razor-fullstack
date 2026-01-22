@@ -24,7 +24,7 @@ public class DepartamentService : IDepartamentService
             throw new InvalidOperationException("Já existe um departamento com este nome.");
         }
 
-        // Valida se o gerente existe (apenas se informado)
+        
         if (viewModel.ManagerId.HasValue)
         {
             var manager = await _context.Employees
@@ -35,7 +35,6 @@ public class DepartamentService : IDepartamentService
                 throw new InvalidOperationException("O gerente informado não existe.");
             }
 
-            // Valida se o gerente já é gerente de outro departamento
             var existingDepartament = await _context.Departaments
                 .FirstOrDefaultAsync(d => d.ManagerId == viewModel.ManagerId.Value);
             

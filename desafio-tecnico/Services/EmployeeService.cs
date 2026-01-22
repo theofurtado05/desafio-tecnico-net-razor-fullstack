@@ -16,22 +16,40 @@ public class EmployeeService : IEmployeeService
 
     public async Task<List<Employee>> GetAllEmployeesAsync()
     {
-        return await _context.Employees
+        var employees = await _context.Employees
             .Include(e => e.Departament)
+            .AsSplitQuery()
             .OrderBy(e => e.Name)
             .ToListAsync();
+        
+        foreach (var employee in employees)
+        {
+            if (employee.Departament != null)
+            {
+                employee.Departament.Employees = new List<Employee>();
+            }
+        }
+        
+        return employees;
     }
 
     public async Task<Employee?> GetEmployeeByIdAsync(int id)
     {
-        return await _context.Employees
+        var employee = await _context.Employees
             .Include(e => e.Departament)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (employee?.Departament != null)
+        {
+            employee.Departament.Employees = new List<Employee>();
+        }
+        
+        return employee;
     }
 
     public async Task<Employee?> CreateEmployeeAsync(CreateEmployeeViewModel viewModel)
     {
-        // Validar se o departamento existe
         var departament = await _context.Departaments
             .FirstOrDefaultAsync(d => d.Id == viewModel.DepartmentId);
 
@@ -40,7 +58,6 @@ public class EmployeeService : IEmployeeService
             throw new InvalidOperationException("O departamento informado não existe.");
         }
 
-        // Validar se o CPF já existe
         var existingCpf = await _context.Employees
             .FirstOrDefaultAsync(e => e.CPF == viewModel.CPF);
 
@@ -49,7 +66,6 @@ public class EmployeeService : IEmployeeService
             throw new InvalidOperationException("Já existe um colaborador com este CPF.");
         }
 
-        // Validar se o RG já existe (se informado)
         if (!string.IsNullOrWhiteSpace(viewModel.Rg))
         {
             var existingRg = await _context.Employees
@@ -88,7 +104,6 @@ public class EmployeeService : IEmployeeService
             return null;
         }
 
-        // Validar se o departamento existe
         var departament = await _context.Departaments
             .FirstOrDefaultAsync(d => d.Id == viewModel.DepartmentId);
 
@@ -97,7 +112,6 @@ public class EmployeeService : IEmployeeService
             throw new InvalidOperationException("O departamento informado não existe.");
         }
 
-        // Validar se o CPF já existe (em outro colaborador)
         var existingCpf = await _context.Employees
             .FirstOrDefaultAsync(e => e.CPF == viewModel.CPF && e.Id != id);
 
@@ -106,7 +120,6 @@ public class EmployeeService : IEmployeeService
             throw new InvalidOperationException("Já existe um colaborador com este CPF.");
         }
 
-        // Validar se o RG já existe (se informado)
         if (!string.IsNullOrWhiteSpace(viewModel.Rg))
         {
             var existingRg = await _context.Employees
@@ -138,7 +151,6 @@ public class EmployeeService : IEmployeeService
             return false;
         }
 
-        // Verificar se o colaborador é gerente de algum departamento
         var managedDepartament = await _context.Departaments
             .FirstOrDefaultAsync(d => d.ManagerId == id);
 
