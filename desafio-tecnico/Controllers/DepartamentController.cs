@@ -88,4 +88,49 @@ public class DepartamentController : Controller
         return Ok(result);
     }
 
+    [HttpPut("api/departaments/{id}")]
+    [ApiExplorerSettings(IgnoreApi = false)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Models.Departament>> UpdateApi(int id, [FromBody] CreateDepartamentViewModel viewModel)
+    {
+        if (viewModel == null)
+        {
+            return BadRequest("O corpo da requisição não pode ser nulo.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var departament = await _departamentService.UpdateDepartamentAsync(id, viewModel);
+
+            if (departament == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(departament);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Erro de validação ao atualizar departamento");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Erro de banco de dados ao atualizar departamento");
+            return BadRequest(new { message = "Erro ao salvar no banco de dados. Verifique se os dados estão corretos." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao atualizar departamento via API");
+            return StatusCode(500, new { message = "Ocorreu um erro ao atualizar o departamento." });
+        }
+    }
+
 }

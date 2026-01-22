@@ -24,7 +24,7 @@ public class DepartamentService : IDepartamentService
             throw new InvalidOperationException("Já existe um departamento com este nome.");
         }
 
-    
+
         int? managerId = viewModel.ManagerId.HasValue && viewModel.ManagerId.Value > 0 
             ? viewModel.ManagerId.Value 
             : null;
@@ -79,6 +79,85 @@ public class DepartamentService : IDepartamentService
             .FirstOrDefaultAsync(d => d.Id == departament.Id);
     }
 
+    /*
+        - Só é possivel atualizar o responsavel do departamento caso o responsavel ja esteja nesse departamento
+    */
+    public async Task<Departament?> UpdateDepartamentAsync(int id, CreateDepartamentViewModel viewModel)
+    {
+        var departament = await _context.Departaments.FindAsync(id);
+
+        if (departament == null)
+        {
+            return null;
+        }
+
+        var existingName = await _context.Departaments
+            .FirstOrDefaultAsync(d => d.Name == viewModel.Name && d.Id != id);
+
+        if (existingName != null)
+        {
+            throw new InvalidOperationException("Já existe um departamento com este nome.");
+        }
+
+        int? managerId = viewModel.ManagerId.HasValue && viewModel.ManagerId.Value > 0 
+            ? viewModel.ManagerId.Value 
+            : null;
+
+        if (managerId != departament.ManagerId)
+        {
+            if (managerId.HasValue)
+            {
+                var manager = await _context.Employees
+                    .FirstOrDefaultAsync(e => e.Id == managerId.Value);
+
+                if (manager == null)
+                {
+                    throw new InvalidOperationException("O gerente informado não existe.");
+                }
+
+                if (manager.DepartmentId != id)
+                {
+                    throw new InvalidOperationException("O gerente informado deve pertencer a este departamento.");
+                }
+
+                var existingDepartament = await _context.Departaments
+                    .FirstOrDefaultAsync(d => d.ManagerId == managerId.Value && d.Id != id);
+                
+                if (existingDepartament != null)
+                {
+                    throw new InvalidOperationException("O gerente informado já é gerente de outro departamento.");
+                }
+            }
+        }
+
+        if (viewModel.HigherDepartamentId.HasValue)
+        {
+            if (viewModel.HigherDepartamentId.Value == id)
+            {
+                throw new InvalidOperationException("Um departamento não pode ser superior a si mesmo.");
+            }
+
+            var higherDepartament = await _context.Departaments
+                .FirstOrDefaultAsync(d => d.Id == viewModel.HigherDepartamentId.Value);
+
+            if (higherDepartament == null)
+            {
+                throw new InvalidOperationException("O departamento superior informado não existe.");
+            }
+        }
+
+        departament.Name = viewModel.Name;
+        departament.ManagerId = managerId;
+        departament.HigherDepartamentId = viewModel.HigherDepartamentId;
+        departament.UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+
+        await _context.SaveChangesAsync();
+
+        return await _context.Departaments
+            .Include(d => d.Manager)
+            .Include(d => d.HigherDepartament)
+            .FirstOrDefaultAsync(d => d.Id == departament.Id);
+    }
 
     public async Task<List<Departament>> GetAllDepartamentsAsync()
     {
