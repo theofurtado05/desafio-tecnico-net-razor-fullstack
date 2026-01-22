@@ -77,15 +77,14 @@ public class DepartamentController : Controller
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Models.Departament>> GetById(int id)
     {
-        var departament = await _departamentService.GetAllDepartamentsAsync();
-        var result = departament.FirstOrDefault(d => d.Id == id);
+        var departament = await _departamentService.GetDepartamentByIdAsync(id);
 
-        if (result == null)
+        if (departament == null)
         {
             return NotFound();
         }
 
-        return Ok(result);
+        return Ok(departament);
     }
 
     [HttpPut("api/departaments/{id}")]

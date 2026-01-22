@@ -159,6 +159,27 @@ public class DepartamentService : IDepartamentService
             .FirstOrDefaultAsync(d => d.Id == departament.Id);
     }
 
+    public async Task<Departament?> GetDepartamentByIdAsync(int id)
+    {
+        var departament = await _context.Departaments
+            .Include(d => d.Manager)
+            .Include(d => d.HigherDepartament)
+            .FirstOrDefaultAsync(d => d.Id == id);
+
+        if (departament == null)
+        {
+            return null;
+        }
+
+        var employees = await _context.Employees
+            .Where(e => e.DepartmentId == id)
+            .ToListAsync();
+
+        departament.Employees = employees;
+
+        return departament;
+    }
+
     public async Task<List<Departament>> GetAllDepartamentsAsync()
     {
         return await _context.Departaments
