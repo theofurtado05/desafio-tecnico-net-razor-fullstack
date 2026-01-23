@@ -197,6 +197,8 @@ public class DepartamentService : IDepartamentService
 
         var query = _context.Departaments
             .Where(d => d.IsDeleted == null || d.IsDeleted == false)
+            .Include(d => d.Manager)
+            .Include(d => d.HigherDepartament)
             .OrderBy(d => d.Name);
 
         var totalRecords = await query.CountAsync();
