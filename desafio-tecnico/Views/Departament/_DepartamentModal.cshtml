@@ -1,0 +1,47 @@
+<div class="modal fade" id="departamentModal" tabindex="-1" aria-labelledby="departamentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="departamentModalLabel">Novo Departamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="departamentForm">
+                    <input type="hidden" id="departamentId" />
+                    
+                    <div class="mb-3">
+                        <label for="departamentName" class="form-label">
+                            Nome do Departamento <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="departamentName" required maxlength="150" placeholder="Digite o nome do departamento">
+                        <div class="invalid-feedback">
+                            O nome do departamento é obrigatório.
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="managerFieldContainer" style="display: none;">
+                        <label for="departamentManagerId" class="form-label">Gerente</label>
+                        <select class="form-select" id="departamentManagerId">
+                            <option value="">Selecione um gerente (opcional)</option>
+                        </select>
+                        <small class="form-text text-muted">O gerente deve pertencer a este departamento</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="departamentHigherId" class="form-label">Departamento Superior</label>
+                        <select class="form-select" id="departamentHigherId">
+                            <option value="">Nenhum</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="saveDepartamentBtn">
+                    <span class="spinner-border spinner-border-sm d-none" id="saveDepartamentSpinner" role="status" aria-hidden="true"></span>
+                    <span id="saveDepartamentText">Salvar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

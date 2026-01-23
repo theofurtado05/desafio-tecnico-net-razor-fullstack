@@ -8,7 +8,13 @@
             <h1 class="mb-0 fw-bold">Departamentos</h1>
             <p class="mt-0 text-muted">Carregando...</p>
         </div>
-        <button class="btn btn-primary" onclick="openModal('create')">Criar Departamento</button>
+        <button class="btn btn-primary" onclick="openDepartamentModal('create')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+            </svg>
+            Criar Departamento
+        </button>
     </div>
 
     @{
@@ -27,9 +33,15 @@
     })
 </div>
 
+@await Html.PartialAsync("_DepartamentModal")
+
 @section Scripts {
     <script src="~/js/pagedTable.js"></script>
     <script>
+        if (typeof renderTableData === 'undefined') {
+            console.warn('Aguardando carregamento de pagedTable.js...');
+        }
+
         const apiUrl = '/api/departaments';
         let currentPage = 1;
         const pageSize = 10;
@@ -59,7 +71,8 @@
                 }
 
                 // carregar dados na tabela
-                renderTableData('departamentTable', pagedData.data, (item) => {
+                if (typeof renderTableData === 'function') {
+                    renderTableData('departamentTable', pagedData.data, (item) => {
                     return `
                         <td>${escapeHtml(item.name || '')}</td>
                         <td>${escapeHtml(item.manager?.name || 'Sem gerente')}</td>
@@ -78,7 +91,10 @@
                             </button>
                         </td>
                     `;
-                });
+                    });
+                } else {
+                    console.error('Função renderTableData não encontrada. Verifique se pagedTable.js está carregado.');
+                }
 
                 updatePagination(pagedData);
             } catch (error) {
@@ -91,7 +107,9 @@
                     totalPages: 0,
                     itemsInPage: 0
                 };
-                renderTableData('departamentTable', [], () => '');
+                if (typeof renderTableData === 'function') {
+                    renderTableData('departamentTable', [], () => '');
+                }
                 updatePagination(pagedData);
             }
         }
@@ -197,8 +215,215 @@
             paginationDiv.innerHTML = paginationHTML;
         }
 
+        let currentEditId = null;
+
+        async function openDepartamentModal(mode, id = null) {
+            const modalElement = document.getElementById('departamentModal');
+            if (!modalElement) {
+                console.error('Modal não encontrado');
+                return;
+            }
+
+            currentEditId = id;
+            const modal = new bootstrap.Modal(modalElement);
+            const modalTitle = document.getElementById('departamentModalLabel');
+            const form = document.getElementById('departamentForm');
+
+            if (!form) {
+                console.error('Formulário não encontrado');
+                return;
+            }
+
+            form.reset();
+            const departamentIdInput = document.getElementById('departamentId');
+            if (departamentIdInput) {
+                departamentIdInput.value = '';
+            }
+
+            form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            
+            const managerFieldContainer = document.getElementById('managerFieldContainer');
+            
+            if (mode === 'create') {
+                modalTitle.textContent = 'Novo Departamento';
+                document.getElementById('saveDepartamentText').textContent = 'Salvar';
+                
+                if (managerFieldContainer) {
+                    managerFieldContainer.style.display = 'none';
+                }
+            } else {
+                modalTitle.textContent = 'Editar Departamento';
+                document.getElementById('saveDepartamentText').textContent = 'Atualizar';
+                
+                if (managerFieldContainer) {
+                    managerFieldContainer.style.display = 'block';
+                }
+                
+                // carregar dados do departamento para o modal
+                try {
+                    const response = await fetch(`${apiUrl}/${id}`);
+                    if (response.ok) {
+                        const departament = await response.json();
+                        document.getElementById('departamentId').value = departament.id;
+                        document.getElementById('departamentName').value = departament.name || '';
+                        document.getElementById('departamentManagerId').value = departament.managerId ? departament.managerId.toString() : '';
+                        document.getElementById('departamentHigherId').value = departament.higherDepartamentId ? departament.higherDepartamentId.toString() : '';
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar departamento:', error);
+                }
+            }
+
+            await loadModalSelects(id);
+            
+            modal.show();
+        }
+
+        async function loadModalSelects(excludeDepartamentId = null) {
+            const managerFieldContainer = document.getElementById('managerFieldContainer');
+            const isManagerFieldVisible = managerFieldContainer && managerFieldContainer.style.display !== 'none';
+            
+            // carregar employees para o select de gerente (apenas se o campo estiver visível)
+            if (isManagerFieldVisible) {
+                try {
+                    const employeesResponse = await fetch('/api/employees?page=1&pageSize=1000');
+                    if (employeesResponse.ok) {
+                        const employeesData = await employeesResponse.json();
+                        const managerSelect = document.getElementById('departamentManagerId');
+                        const currentValue = managerSelect.value;
+                        
+                        // limpar opções exceto a primeira
+                        managerSelect.innerHTML = '<option value="">Selecione um gerente (opcional)</option>';
+                        
+                        employeesData.data.forEach(employee => {
+                            const option = document.createElement('option');
+                            option.value = employee.id;
+                            option.textContent = employee.name;
+                            if (employee.id.toString() === currentValue) {
+                                option.selected = true;
+                            }
+                            managerSelect.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar employees:', error);
+                }
+            }
+
+            // carregar departamentos para o select de departamento superior
+            try {
+                const departamentsResponse = await fetch(`${apiUrl}?page=1&pageSize=1000`);
+                if (departamentsResponse.ok) {
+                    const departamentsData = await departamentsResponse.json();
+                    const higherSelect = document.getElementById('departamentHigherId');
+                    const currentValue = higherSelect.value;
+                    
+                    // limpar opções exceto a primeira
+                    higherSelect.innerHTML = '<option value="">Nenhum</option>';
+                    
+                    departamentsData.data.forEach(departament => {
+                        // não incluir o próprio departamento na lista de superiores
+                        if (excludeDepartamentId && departament.id === excludeDepartamentId) {
+                            return;
+                        }
+                        
+                        const option = document.createElement('option');
+                        option.value = departament.id;
+                        option.textContent = departament.name;
+                        if (departament.id.toString() === currentValue) {
+                            option.selected = true;
+                        }
+                        higherSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar departamentos:', error);
+            }
+        }
+
+        async function saveDepartament() {
+            const form = document.getElementById('departamentForm');
+            if (!form) {
+                console.error('Formulário não encontrado');
+                return;
+            }
+
+            const saveBtn = document.getElementById('saveDepartamentBtn');
+            const spinner = document.getElementById('saveDepartamentSpinner');
+            const saveText = document.getElementById('saveDepartamentText');
+
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+            
+            const departamentId = document.getElementById('departamentId').value;
+            const isEdit = departamentId !== '';
+            
+            const managerFieldContainer = document.getElementById('managerFieldContainer');
+            const isManagerFieldVisible = managerFieldContainer && managerFieldContainer.style.display !== 'none';
+            
+            const managerIdValue = isManagerFieldVisible ? document.getElementById('departamentManagerId').value : '';
+            const higherIdValue = document.getElementById('departamentHigherId').value;
+            
+            const data = {
+                name: document.getElementById('departamentName').value.trim(),
+                managerId: isManagerFieldVisible && managerIdValue !== '' ? parseInt(managerIdValue) : null,
+                higherDepartamentId: higherIdValue === '' ? null : parseInt(higherIdValue)
+            };
+
+            saveBtn.disabled = true;
+            spinner.classList.remove('d-none');
+            saveText.textContent = 'Salvando...';
+            
+            try {
+                const url = isEdit ? `${apiUrl}/${departamentId}` : apiUrl;
+                const method = isEdit ? 'PUT' : 'POST';
+                
+                console.log('Enviando requisição:', { url, method, data });
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { message: text || 'Erro desconhecido' };
+                }
+                
+                if (response.ok) {
+                    // fechar modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('departamentModal'));
+                    modal.hide();
+                    
+                    loadDepartaments(currentPage);
+
+                    alert(isEdit ? 'Departamento atualizado com sucesso!' : 'Departamento criado com sucesso!');
+                } else {
+                    const errorMessage = result.message || result.title || 'Erro ao salvar departamento';
+                    alert(errorMessage);
+                }
+            } catch (error) {
+                console.error('Erro ao salvar departamento:', error);
+                alert('Erro ao salvar departamento. Tente novamente.');
+            } finally {
+                saveBtn.disabled = false;
+                spinner.classList.add('d-none');
+                saveText.textContent = isEdit ? 'Atualizar' : 'Salvar';
+            }
+        }
+
         function editDepartament(id) {
-            //TODO: editar
+            openDepartamentModal('edit', id);
         }
 
         function deleteDepartament(id) {
@@ -228,7 +453,42 @@
 
         // carregar dados ao abrir a pagina
         document.addEventListener('DOMContentLoaded', () => {
-            loadDepartaments(1);
+            try {
+                setTimeout(() => {
+                    loadDepartaments(1);
+                }, 100);
+                
+                const saveBtn = document.getElementById('saveDepartamentBtn');
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', saveDepartament);
+                } else {
+                    console.warn('Botão saveDepartamentBtn não encontrado');
+                }
+                
+                const departamentModal = document.getElementById('departamentModal');
+                if (departamentModal) {
+                    departamentModal.addEventListener('hidden.bs.modal', () => {
+                        const form = document.getElementById('departamentForm');
+                        if (form) {
+                            form.reset();
+                            form.classList.remove('was-validated');
+                            const departamentIdInput = document.getElementById('departamentId');
+                            if (departamentIdInput) {
+                                departamentIdInput.value = '';
+                            }
+                            const managerFieldContainer = document.getElementById('managerFieldContainer');
+                            if (managerFieldContainer) {
+                                managerFieldContainer.style.display = 'none';
+                            }
+                            currentEditId = null;
+                        }
+                    });
+                } else {
+                    console.warn('Modal departamentModal não encontrado');
+                }
+            } catch (error) {
+                console.error('Erro ao inicializar página:', error);
+            }
         });
     </script>
 }

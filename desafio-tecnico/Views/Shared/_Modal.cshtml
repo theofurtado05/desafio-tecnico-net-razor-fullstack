@@ -1,0 +1,23 @@
+@{
+    var modalId = ViewBag.ModalId as string ?? "modal";
+    var modalTitle = ViewBag.ModalTitle as string ?? "Modal";
+    var modalSize = ViewBag.ModalSize as string ?? ""; // modal-lg, modal-xl, modal-sm
+}
+
+<div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@(modalId)Label" aria-hidden="true">
+    <div class="modal-dialog @modalSize">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="@(modalId)Label">@modalTitle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @RenderBody()
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                @RenderSection("ModalFooter", required: false)
+            </div>
+        </div>
+    </div>
+</div>
