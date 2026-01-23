@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using desafio_tecnico.Data;
 using desafio_tecnico.Models;
 using desafio_tecnico.ViewModels;
+using System.Linq;
 
 namespace desafio_tecnico.Services;
 
@@ -15,7 +16,7 @@ public class EmployeeService : IEmployeeService
     }
 
 
-    public async Task<PagedResponse<Employee>> GetAllEmployeesAsync(int page, int pageSize)
+    public async Task<PagedResponse<Employee>> GetAllEmployeesAsync(int page, int pageSize, EmployeeFilterViewModel? filters = null)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
@@ -24,7 +25,34 @@ public class EmployeeService : IEmployeeService
         var query = _context.Employees
             .Where(e => e.IsDeleted == null || e.IsDeleted == false)
             .Include(e => e.Departament)
-            .OrderBy(e => e.Name);
+            .AsQueryable();
+
+        // Aplicar filtros
+        if (filters != null)
+        {
+            if (!string.IsNullOrWhiteSpace(filters.Name))
+            {
+                query = query.Where(e => e.Name.Contains(filters.Name.Trim()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.CPF))
+            {
+                var cpfFilter = new string(filters.CPF.Trim().Where(char.IsDigit).ToArray());
+                query = query.Where(e => e.CPF.Contains(cpfFilter));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.RG))
+            {
+                query = query.Where(e => e.Rg != null && e.Rg.Contains(filters.RG.Trim()));
+            }
+
+            if (filters.DepartmentId.HasValue && filters.DepartmentId.Value > 0)
+            {
+                query = query.Where(e => e.DepartmentId == filters.DepartmentId.Value);
+            }
+        }
+
+        query = query.OrderBy(e => e.Name);
 
         var totalRecords = await query.CountAsync();
         var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
@@ -60,6 +88,7 @@ public class EmployeeService : IEmployeeService
         var employee = await _context.Employees
             .Where(e => e.Id == id && (e.IsDeleted == null || e.IsDeleted == false))
             .Include(e => e.Departament)
+                .ThenInclude(d => d!.Manager)
             .AsSplitQuery()
             .FirstOrDefaultAsync();
 
@@ -190,5 +219,57 @@ public class EmployeeService : IEmployeeService
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    public async Task<List<Employee>> GetEmployeesByManagerIdAsync(int managerId)
+    {
+        // Buscar o departamento que o gerente gerencia
+        var managedDepartament = await _context.Departaments
+            .Where(d => d.ManagerId == managerId && (d.IsDeleted == null || d.IsDeleted == false))
+            .FirstOrDefaultAsync();
+
+        if (managedDepartament == null)
+        {
+            return new List<Employee>();
+        }
+
+        // Buscar todos os departamentos subordinados recursivamente
+        var allSubDepartaments = await GetSubDepartamentsRecursiveAsync(managedDepartament.Id);
+        var allDepartamentIds = allSubDepartaments.Select(d => d.Id).ToList();
+        allDepartamentIds.Add(managedDepartament.Id);
+
+        // Buscar todos os colaboradores desses departamentos
+        var employees = await _context.Employees
+            .Where(e => allDepartamentIds.Contains(e.DepartmentId ?? 0) && (e.IsDeleted == null || e.IsDeleted == false))
+            .Include(e => e.Departament)
+            .OrderBy(e => e.Name)
+            .ToListAsync();
+
+        foreach (var employee in employees)
+        {
+            if (employee.Departament != null)
+            {
+                employee.Departament.Employees = new List<Employee>();
+            }
+        }
+
+        return employees;
+    }
+
+    private async Task<List<Departament>> GetSubDepartamentsRecursiveAsync(int departamentId)
+    {
+        var result = new List<Departament>();
+        var subDepartaments = await _context.Departaments
+            .Where(d => d.HigherDepartamentId == departamentId && (d.IsDeleted == null || d.IsDeleted == false))
+            .ToListAsync();
+
+        foreach (var subDept in subDepartaments)
+        {
+            result.Add(subDept);
+            var deeperSubs = await GetSubDepartamentsRecursiveAsync(subDept.Id);
+            result.AddRange(deeperSubs);
+        }
+
+        return result;
     }
 }

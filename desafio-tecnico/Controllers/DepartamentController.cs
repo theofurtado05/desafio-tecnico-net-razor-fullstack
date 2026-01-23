@@ -32,9 +32,21 @@ public class DepartamentController : Controller
     [HttpGet("api/departaments")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedResponse<Models.Departament>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<PagedResponse<Models.Departament>>> GetAll(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? name = null,
+        [FromQuery] int? managerId = null,
+        [FromQuery] int? higherDepartamentId = null)
     {
-        var result = await _departamentService.GetAllDepartamentsAsync(page, pageSize);
+        var filters = new DepartamentFilterViewModel
+        {
+            Name = name,
+            ManagerId = managerId,
+            HigherDepartamentId = higherDepartamentId
+        };
+
+        var result = await _departamentService.GetAllDepartamentsAsync(page, pageSize, filters);
         return Ok(result);
     }
 

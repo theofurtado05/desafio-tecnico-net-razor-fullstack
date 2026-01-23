@@ -3,7 +3,7 @@
 }
 
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="d-flex flex-column gap-2">
             <h1 class="mb-0 fw-bold">Colaboradores</h1>
             <p class="mt-0 text-muted">Carregando...</p>
@@ -15,6 +15,42 @@
             </svg>
             Criar Colaborador
         </button>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filtros</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="filterName" class="form-label">Nome</label>
+                    <input type="text" class="form-control" id="filterName" placeholder="Nome do colaborador">
+                </div>
+                <div class="col-md-2">
+                    <label for="filterCPF" class="form-label">CPF</label>
+                    <input type="text" class="form-control" id="filterCPF" placeholder="CPF" maxlength="11">
+                </div>
+                <div class="col-md-2">
+                    <label for="filterRG" class="form-label">RG</label>
+                    <input type="text" class="form-control" id="filterRG" placeholder="RG" maxlength="20">
+                </div>
+                <div class="col-md-3">
+                    <label for="filterDepartment" class="form-label">Departamento</label>
+                    <select class="form-select" id="filterDepartment">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" onclick="applyFilters()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5z"/>
+                        </svg>
+                        Filtrar
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     @{
@@ -45,6 +81,7 @@
         const apiUrl = '/api/employees';
         let currentPage = 1;
         const pageSize = 10;
+        let currentFilters = {};
 
         function escapeHtml(text) {
             if (!text) return '';
@@ -61,7 +98,19 @@
         async function loadEmployees(page = 1) {
             try {
                 currentPage = page;
-                const response = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}`);
+                
+                // Construir query string com filtros
+                const params = new URLSearchParams({
+                    page: currentPage.toString(),
+                    pageSize: pageSize.toString()
+                });
+                
+                if (currentFilters.name) params.append('name', currentFilters.name);
+                if (currentFilters.cpf) params.append('cpf', currentFilters.cpf);
+                if (currentFilters.rg) params.append('rg', currentFilters.rg);
+                if (currentFilters.departmentId) params.append('departmentId', currentFilters.departmentId);
+                
+                const response = await fetch(`${apiUrl}?${params.toString()}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -427,8 +476,47 @@
             }
         });
 
+        async function loadDepartmentsForFilter() {
+            try {
+                const response = await fetch('/api/departaments?page=1&pageSize=1000');
+                if (response.ok) {
+                    const data = await response.json();
+                    const select = document.getElementById('filterDepartment');
+                    if (select) {
+                        data.data.forEach(dept => {
+                            const option = document.createElement('option');
+                            option.value = dept.id;
+                            option.textContent = dept.name;
+                            select.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar departamentos:', error);
+            }
+        }
+
+        function applyFilters() {
+            currentFilters = {
+                name: document.getElementById('filterName').value.trim() || null,
+                cpf: document.getElementById('filterCPF').value.replace(/\D/g, '') || null,
+                rg: document.getElementById('filterRG').value.trim() || null,
+                departmentId: document.getElementById('filterDepartment').value || null
+            };
+            loadEmployees(1);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             try {
+                loadDepartmentsForFilter();
+                
+                const cpfFilter = document.getElementById('filterCPF');
+                if (cpfFilter) {
+                    cpfFilter.addEventListener('input', (e) => {
+                        e.target.value = e.target.value.replace(/\D/g, '');
+                    });
+                }
+                
                 setTimeout(() => {
                     loadEmployees(1);
                 }, 100);

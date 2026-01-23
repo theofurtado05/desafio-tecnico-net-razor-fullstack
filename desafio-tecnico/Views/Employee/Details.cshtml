@@ -51,6 +51,10 @@
                                     <td id="departament">-</td>
                                 </tr>
                                 <tr>
+                                    <td class="fw-bold">Gerente do Departamento:</td>
+                                    <td id="manager">-</td>
+                                </tr>
+                                <tr>
                                     <td class="fw-bold">Data de Criação:</td>
                                     <td id="createdAt">-</td>
                                 </tr>
@@ -174,6 +178,14 @@
                         ? employee.departament.name
                         : 'Sem departamento';
                     departamentElement.textContent = departamentName;
+                }
+                
+                const managerElement = document.getElementById('manager');
+                if (managerElement) {
+                    const managerName = (employee.departament && employee.departament.manager && employee.departament.manager.name)
+                        ? employee.departament.manager.name
+                        : 'Sem gerente';
+                    managerElement.textContent = managerName;
                 }
                 
                 const createdAtElement = document.getElementById('createdAt');

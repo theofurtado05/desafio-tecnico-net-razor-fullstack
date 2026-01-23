@@ -178,18 +178,34 @@ public class DepartamentService : IDepartamentService
 
         departament.Employees = employees;
 
-        var subDepartaments = await _context.Departaments
-            .Where(d => d.HigherDepartamentId == id && (d.IsDeleted == null || d.IsDeleted == false))
-            .Include(d => d.Manager)
-            .ToListAsync();
-
+        // buscar árvore hierárquica recursiva de subdepartamentos
+        var subDepartaments = await GetSubDepartamentsRecursiveAsync(id);
         departament.SubDepartaments = subDepartaments;
 
         return departament;
     }
 
+    private async Task<List<Departament>> GetSubDepartamentsRecursiveAsync(int departamentId)
+    {
+        var result = new List<Departament>();
+        var directSubs = await _context.Departaments
+            .Where(d => d.HigherDepartamentId == departamentId && (d.IsDeleted == null || d.IsDeleted == false))
+            .Include(d => d.Manager)
+            .ToListAsync();
 
-    public async Task<PagedResponse<Departament>> GetAllDepartamentsAsync(int page, int pageSize)
+        foreach (var subDept in directSubs)
+        {
+            result.Add(subDept);
+            // recursividade para buscar os subdepartamentos deste subdepartamento
+            var deeperSubs = await GetSubDepartamentsRecursiveAsync(subDept.Id);
+            result.AddRange(deeperSubs);
+        }
+
+        return result;
+    }
+
+
+    public async Task<PagedResponse<Departament>> GetAllDepartamentsAsync(int page, int pageSize, DepartamentFilterViewModel? filters = null)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
@@ -199,7 +215,27 @@ public class DepartamentService : IDepartamentService
             .Where(d => d.IsDeleted == null || d.IsDeleted == false)
             .Include(d => d.Manager)
             .Include(d => d.HigherDepartament)
-            .OrderBy(d => d.Name);
+            .AsQueryable();
+
+        if (filters != null)
+        {
+            if (!string.IsNullOrWhiteSpace(filters.Name))
+            {
+                query = query.Where(d => d.Name.Contains(filters.Name.Trim()));
+            }
+
+            if (filters.ManagerId.HasValue && filters.ManagerId.Value > 0)
+            {
+                query = query.Where(d => d.ManagerId == filters.ManagerId.Value);
+            }
+
+            if (filters.HigherDepartamentId.HasValue && filters.HigherDepartamentId.Value > 0)
+            {
+                query = query.Where(d => d.HigherDepartamentId == filters.HigherDepartamentId.Value);
+            }
+        }
+
+        query = query.OrderBy(d => d.Name);
 
         var totalRecords = await query.CountAsync();
         var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);

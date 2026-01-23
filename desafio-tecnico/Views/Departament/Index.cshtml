@@ -3,7 +3,7 @@
 }
 
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="d-flex flex-column gap-2">
             <h1 class="mb-0 fw-bold">Departamentos</h1>
             <p class="mt-0 text-muted">Carregando...</p>
@@ -15,6 +15,40 @@
             </svg>
             Criar Departamento
         </button>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filtros</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="filterName" class="form-label">Nome do Departamento</label>
+                    <input type="text" class="form-control" id="filterName" placeholder="Nome do departamento">
+                </div>
+                <div class="col-md-3">
+                    <label for="filterManager" class="form-label">Gerente</label>
+                    <select class="form-select" id="filterManager">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filterHigherDepartament" class="form-label">Departamento Superior</label>
+                    <select class="form-select" id="filterHigherDepartament">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" onclick="applyFilters()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5z"/>
+                        </svg>
+                        Filtrar
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     @{
@@ -45,6 +79,7 @@
         const apiUrl = '/api/departaments';
         let currentPage = 1;
         const pageSize = 10;
+        let currentFilters = {};
 
         function escapeHtml(text) {
             if (!text) return '';
@@ -56,7 +91,18 @@
         async function loadDepartaments(page = 1) {
             try {
                 currentPage = page;
-                const response = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}`);
+                
+                // Construir query string com filtros
+                const params = new URLSearchParams({
+                    page: currentPage.toString(),
+                    pageSize: pageSize.toString()
+                });
+                
+                if (currentFilters.name) params.append('name', currentFilters.name);
+                if (currentFilters.managerId) params.append('managerId', currentFilters.managerId);
+                if (currentFilters.higherDepartamentId) params.append('higherDepartamentId', currentFilters.higherDepartamentId);
+                
+                const response = await fetch(`${apiUrl}?${params.toString()}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -462,8 +508,55 @@
         });
 
         // carregar dados ao abrir a pagina
+        async function loadFiltersData() {
+            try {
+                // Carregar employees para filtro de gerente
+                const employeesResponse = await fetch('/api/employees?page=1&pageSize=1000');
+                if (employeesResponse.ok) {
+                    const employeesData = await employeesResponse.json();
+                    const managerSelect = document.getElementById('filterManager');
+                    if (managerSelect) {
+                        employeesData.data.forEach(employee => {
+                            const option = document.createElement('option');
+                            option.value = employee.id;
+                            option.textContent = employee.name;
+                            managerSelect.appendChild(option);
+                        });
+                    }
+                }
+
+                // Carregar departamentos para filtro de departamento superior
+                const departamentsResponse = await fetch(`${apiUrl}?page=1&pageSize=1000`);
+                if (departamentsResponse.ok) {
+                    const departamentsData = await departamentsResponse.json();
+                    const higherSelect = document.getElementById('filterHigherDepartament');
+                    if (higherSelect) {
+                        departamentsData.data.forEach(departament => {
+                            const option = document.createElement('option');
+                            option.value = departament.id;
+                            option.textContent = departament.name;
+                            higherSelect.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados dos filtros:', error);
+            }
+        }
+
+        function applyFilters() {
+            currentFilters = {
+                name: document.getElementById('filterName').value.trim() || null,
+                managerId: document.getElementById('filterManager').value || null,
+                higherDepartamentId: document.getElementById('filterHigherDepartament').value || null
+            };
+            loadDepartaments(1);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             try {
+                loadFiltersData();
+                
                 setTimeout(() => {
                     loadDepartaments(1);
                 }, 100);

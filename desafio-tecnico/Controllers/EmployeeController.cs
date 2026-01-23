@@ -34,9 +34,23 @@ public class EmployeeController : Controller
     [HttpGet("api/employees")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedResponse<Models.Employee>>> GetAllApi([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<PagedResponse<Models.Employee>>> GetAllApi(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? name = null,
+        [FromQuery] string? cpf = null,
+        [FromQuery] string? rg = null,
+        [FromQuery] int? departmentId = null)
     {
-        var result = await _employeeService.GetAllEmployeesAsync(page, pageSize);
+        var filters = new EmployeeFilterViewModel
+        {
+            Name = name,
+            CPF = cpf,
+            RG = rg,
+            DepartmentId = departmentId
+        };
+
+        var result = await _employeeService.GetAllEmployeesAsync(page, pageSize, filters);
         return Ok(result);
     }
 
@@ -150,6 +164,24 @@ public class EmployeeController : Controller
         {
             _logger.LogError(ex, "Erro ao deletar colaborador via API");
             return StatusCode(500, new { message = "Ocorreu um erro ao deletar o colaborador." });
+        }
+    }
+
+    [HttpGet("api/employees/by-manager/{managerId}")]
+    [ApiExplorerSettings(IgnoreApi = false)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<Models.Employee>>> GetEmployeesByManager(int managerId)
+    {
+        try
+        {
+            var employees = await _employeeService.GetEmployeesByManagerIdAsync(managerId);
+            return Ok(employees);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao buscar colaboradores por gerente");
+            return StatusCode(500, new { message = "Ocorreu um erro ao buscar os colaboradores." });
         }
     }
 
