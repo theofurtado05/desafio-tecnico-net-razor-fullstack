@@ -178,6 +178,13 @@ public class DepartamentService : IDepartamentService
 
         departament.Employees = employees;
 
+        var subDepartaments = await _context.Departaments
+            .Where(d => d.HigherDepartamentId == id && (d.IsDeleted == null || d.IsDeleted == false))
+            .Include(d => d.Manager)
+            .ToListAsync();
+
+        departament.SubDepartaments = subDepartaments;
+
         return departament;
     }
 

@@ -23,6 +23,12 @@ public class DepartamentController : Controller
         return View();
     }
 
+    public IActionResult Details(int id)
+    {
+        ViewBag.DepartamentId = id;
+        return View();
+    }
+
     [HttpGet("api/departaments")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [ProducesResponseType(StatusCodes.Status200OK)]
