@@ -83,7 +83,10 @@ public class ApplicationDbContext : DbContext
                 .HasColumnName("name")
                 .HasMaxLength(150)
                 .IsRequired();
-            entity.HasIndex(d => d.Name).IsUnique();
+
+            entity.HasIndex(d => d.Name)
+                .IsUnique()
+                .HasFilter("\"is_deleted\" = false OR \"is_deleted\" IS NULL");
 
             entity.Property(d => d.ManagerId)
                 .HasColumnName("manager_id");
