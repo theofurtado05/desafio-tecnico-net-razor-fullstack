@@ -5,7 +5,7 @@ namespace desafio_tecnico.Services;
 
 public interface IEmployeeService
 {
-    Task<List<Employee>> GetAllEmployeesAsync();
+    Task<PagedResponse<Employee>> GetAllEmployeesAsync(int page, int pageSize);
     Task<Employee?> GetEmployeeByIdAsync(int id);
     Task<Employee?> CreateEmployeeAsync(CreateEmployeeViewModel viewModel);
     Task<Employee?> UpdateEmployeeAsync(int id, CreateEmployeeViewModel viewModel);

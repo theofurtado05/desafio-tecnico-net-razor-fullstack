@@ -181,12 +181,36 @@ public class DepartamentService : IDepartamentService
         return departament;
     }
 
-    public async Task<List<Departament>> GetAllDepartamentsAsync()
+
+    public async Task<PagedResponse<Departament>> GetAllDepartamentsAsync(int page, int pageSize)
     {
-        return await _context.Departaments
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
+        var query = _context.Departaments
             .Where(d => d.IsDeleted == null || d.IsDeleted == false)
-            .OrderBy(d => d.Name)
+            .OrderBy(d => d.Name);
+
+        var totalRecords = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+
+        var data = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        var itemsInPage = data.Count;
+
+        return new PagedResponse<Departament>
+        {
+            Data = data,
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalRecords = totalRecords,
+            TotalPages = totalPages,
+            ItemsInPage = itemsInPage
+        };
     }
 
     public async Task<bool> ValidateManagerBelongsToDepartamentAsync(int managerId, int? departmentId)

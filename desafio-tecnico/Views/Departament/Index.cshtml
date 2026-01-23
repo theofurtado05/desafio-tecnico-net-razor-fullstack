@@ -1,3 +1,235 @@
 @{
     ViewData["Title"] = "Departamentos";
 }
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex flex-column gap-2">
+            <h1 class="mb-0 fw-bold">Departamentos</h1>
+            <p class="mt-0 text-muted">Carregando...</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('create')">Criar Departamento</button>
+    </div>
+
+    @{
+        ViewBag.Columns = new List<string> { "Nome", "Gerente", "Departamento Superior" };
+        ViewBag.TableId = "departamentTable";
+        ViewBag.ApiUrl = "/api/departaments";
+    }
+
+    @await Html.PartialAsync("_PagedTable", new {
+        Data = new List<object>(),
+        CurrentPage = 1,
+        PageSize = 10,
+        TotalRecords = 0,
+        TotalPages = 0,
+        ItemsInPage = 0
+    })
+</div>
+
+@section Scripts {
+    <script src="~/js/pagedTable.js"></script>
+    <script>
+        const apiUrl = '/api/departaments';
+        let currentPage = 1;
+        const pageSize = 10;
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function loadDepartaments(page = 1) {
+            try {
+                currentPage = page;
+                const response = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const pagedData = await response.json();
+
+                // atualizar total de registros
+                const totalRecordsElement = document.querySelector('.d-flex.flex-column.gap-2 p');
+                if (totalRecordsElement) {
+                    totalRecordsElement.textContent = `${pagedData.totalRecords} departamento(s) cadastrado(s)`;
+                }
+
+                // carregar dados na tabela
+                renderTableData('departamentTable', pagedData.data, (item) => {
+                    return `
+                        <td>${escapeHtml(item.name || '')}</td>
+                        <td>${escapeHtml(item.manager?.name || 'Sem gerente')}</td>
+                        <td>${escapeHtml(item.higherDepartament?.name || 'Nenhum')}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editDepartament(${item.id})" title="Editar">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.293a.5.5 0 0 1-.353-.146l-.854-.854z"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteDepartament(${item.id})" title="Excluir">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                </svg>
+                            </button>
+                        </td>
+                    `;
+                });
+
+                updatePagination(pagedData);
+            } catch (error) {
+                console.error('Erro ao carregar departamentos:', error);
+                const pagedData = {
+                    data: [],
+                    currentPage: currentPage,
+                    pageSize: pageSize,
+                    totalRecords: 0,
+                    totalPages: 0,
+                    itemsInPage: 0
+                };
+                renderTableData('departamentTable', [], () => '');
+                updatePagination(pagedData);
+            }
+        }
+
+        function updatePagination(pagedData) {
+            const cardBody = document.querySelector('#departamentTable').closest('.card-body');
+            if (!cardBody) return;
+
+            let nav = cardBody.querySelector('nav');
+            if (!nav) {
+                // criar nav se não existir
+                nav = document.createElement('nav');
+                nav.setAttribute('aria-label', 'Paginação');
+                const tableContainer = cardBody.querySelector('.table-responsive');
+                if (tableContainer) {
+                    tableContainer.after(nav);
+                } else {
+                    cardBody.appendChild(nav);
+                }
+            }
+
+            if (pagedData.totalPages <= 1 && pagedData.totalRecords === 0) {
+                nav.style.display = 'none';
+                return;
+            }
+
+            nav.style.display = 'block';
+            
+            let paginationDiv = nav.querySelector('.d-flex');
+            if (!paginationDiv) {
+                paginationDiv = document.createElement('div');
+                paginationDiv.className = 'd-flex justify-content-between align-items-center mt-3 flex-wrap gap-2';
+                nav.appendChild(paginationDiv);
+            }
+
+            const startPage = Math.max(1, pagedData.currentPage - 2);
+            const endPage = Math.min(pagedData.totalPages, pagedData.currentPage + 2);
+
+            let paginationHTML = `
+                <div class="text-muted">
+                    ${pagedData.totalRecords > 0 
+                        ? `Mostrando <strong>${(pagedData.currentPage - 1) * pagedData.pageSize + 1}</strong> a <strong>${(pagedData.currentPage - 1) * pagedData.pageSize + pagedData.itemsInPage}</strong> de <strong>${pagedData.totalRecords}</strong> registros`
+                        : 'Nenhum registro encontrado'}
+                </div>
+            `;
+
+            if (pagedData.totalPages > 1) {
+                paginationHTML += `
+                    <ul class="pagination mb-0">
+                        <li class="page-item ${pagedData.currentPage === 1 ? 'disabled' : ''}">
+                            <a class="page-link" href="#" onclick="loadPage('departamentTable', ${pagedData.currentPage - 1}); return false;" aria-label="Anterior">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                `;
+
+                if (startPage > 1) {
+                    paginationHTML += `
+                        <li class="page-item">
+                            <a class="page-link" href="#" onclick="loadPage('departamentTable', 1); return false;">1</a>
+                        </li>
+                    `;
+                    if (startPage > 2) {
+                        paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                    }
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    paginationHTML += `
+                        <li class="page-item ${i === pagedData.currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="loadPage('departamentTable', ${i}); return false;">${i}</a>
+                        </li>
+                    `;
+                }
+
+                if (endPage < pagedData.totalPages) {
+                    if (endPage < pagedData.totalPages - 1) {
+                        paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                    }
+                    paginationHTML += `
+                        <li class="page-item">
+                            <a class="page-link" href="#" onclick="loadPage('departamentTable', ${pagedData.totalPages}); return false;">${pagedData.totalPages}</a>
+                        </li>
+                    `;
+                }
+
+                paginationHTML += `
+                        <li class="page-item ${pagedData.currentPage === pagedData.totalPages ? 'disabled' : ''}">
+                            <a class="page-link" href="#" onclick="loadPage('departamentTable', ${pagedData.currentPage + 1}); return false;" aria-label="Próximo">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                `;
+            }
+
+            paginationHTML += `
+                <div class="text-muted">
+                    ${pagedData.totalPages > 0 ? `Página <strong>${pagedData.currentPage}</strong> de <strong>${pagedData.totalPages}</strong>` : ''}
+                </div>
+            `;
+
+            paginationDiv.innerHTML = paginationHTML;
+        }
+
+        function editDepartament(id) {
+            //TODO: editar
+        }
+
+        function deleteDepartament(id) {
+            if (confirm('Tem certeza que deseja excluir este departamento?')) {
+                fetch(`${apiUrl}/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        loadDepartaments(currentPage);
+                    } else {
+                        alert('Erro ao excluir departamento');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao excluir departamento');
+                });
+            }
+        }
+        
+        window.addEventListener('pagedTable:loadPage', (event) => {
+            if (event.detail.tableId === 'departamentTable') {
+                loadDepartaments(event.detail.page);
+            }
+        });
+
+        // carregar dados ao abrir a pagina
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDepartaments(1);
+        });
+    </script>
+}
+        

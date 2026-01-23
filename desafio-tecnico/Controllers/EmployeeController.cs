@@ -28,10 +28,10 @@ public class EmployeeController : Controller
     [HttpGet("api/employees")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<Models.Employee>>> GetAllApi()
+    public async Task<ActionResult<PagedResponse<Models.Employee>>> GetAllApi([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var employees = await _employeeService.GetAllEmployeesAsync();
-        return Ok(employees);
+        var result = await _employeeService.GetAllEmployeesAsync(page, pageSize);
+        return Ok(result);
     }
 
     [HttpGet("api/employees/{id}")]

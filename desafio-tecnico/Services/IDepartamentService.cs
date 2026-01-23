@@ -8,7 +8,7 @@ public interface IDepartamentService
     Task<Departament?> CreateDepartamentAsync(CreateDepartamentViewModel viewModel);
     Task<Departament?> UpdateDepartamentAsync(int id, CreateDepartamentViewModel viewModel);
     Task<Departament?> GetDepartamentByIdAsync(int id);
-    Task<List<Departament>> GetAllDepartamentsAsync();
+    Task<PagedResponse<Departament>> GetAllDepartamentsAsync(int page, int pageSize);
     Task<bool> ValidateManagerBelongsToDepartamentAsync(int managerId, int? departmentId);
 
     Task<bool> DeleteDepartamentAsync(int id);

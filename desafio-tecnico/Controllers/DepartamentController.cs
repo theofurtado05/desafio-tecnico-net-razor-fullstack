@@ -26,10 +26,10 @@ public class DepartamentController : Controller
     [HttpGet("api/departaments")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<Models.Departament>>> GetAll()
+    public async Task<ActionResult<PagedResponse<Models.Departament>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var departaments = await _departamentService.GetAllDepartamentsAsync();
-        return Ok(departaments);
+        var result = await _departamentService.GetAllDepartamentsAsync(page, pageSize);
+        return Ok(result);
     }
 
     [HttpPost("api/departaments")]

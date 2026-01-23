@@ -1,0 +1,125 @@
+@model dynamic
+@{
+    var pagedData = Model as dynamic;
+    var data = pagedData?.Data as System.Collections.IEnumerable ?? new List<object>();
+    var currentPage = (int)(pagedData?.CurrentPage ?? 1);
+    var pageSize = (int)(pagedData?.PageSize ?? 10);
+    var totalRecords = (int)(pagedData?.TotalRecords ?? 0);
+    var totalPages = (int)(pagedData?.TotalPages ?? 0);
+    var itemsInPage = (int)(pagedData?.ItemsInPage ?? 0);
+    var columns = ViewBag.Columns as List<string> ?? new List<string>();
+    var tableId = ViewBag.TableId as string ?? "pagedTable";
+    var apiUrl = ViewBag.ApiUrl as string ?? "";
+}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="@tableId">
+                <thead class="table-light">
+                    <tr>
+                        @foreach (var column in columns)
+                        {
+                            <th>@column</th>
+                        }
+                        <th class="text-end" style="width: 150px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="@(tableId)Body">
+                    @if (itemsInPage == 0)
+                    {
+                        <tr>
+                            <td colspan="@(columns.Count + 1)" class="text-center text-muted py-4">
+                                Nenhum registro encontrado
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (totalPages > 1 || totalRecords > 0)
+        {
+            <nav aria-label="Paginação">
+                <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                    <div class="text-muted">
+                        @if (totalRecords > 0)
+                        {
+                            <span>
+                                Mostrando <strong>@((currentPage - 1) * pageSize + 1)</strong> a 
+                                <strong>@((currentPage - 1) * pageSize + itemsInPage)</strong> de 
+                                <strong>@totalRecords</strong> registros
+                            </span>
+                        }
+                        else
+                        {
+                            <span>Nenhum registro encontrado</span>
+                        }
+                    </div>
+                    
+                    @if (totalPages > 1)
+                    {
+                        <ul class="pagination mb-0">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="#" onclick="loadPage('@tableId', @(currentPage - 1)); return false;" aria-label="Anterior">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            
+                            @{
+                                int startPage = Math.Max(1, currentPage - 2);
+                                int endPage = Math.Min(totalPages, currentPage + 2);
+                            }
+                            
+                            @if (startPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="#" onclick="loadPage('@tableId', 1); return false;">1</a>
+                                </li>
+                                @if (startPage > 2)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                            }
+                            
+                            @for (int i = startPage; i <= endPage; i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" href="#" onclick="loadPage('@tableId', @i); return false;">@i</a>
+                                </li>
+                            }
+                            
+                            @if (endPage < totalPages)
+                            {
+                                @if (endPage < totalPages - 1)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                                <li class="page-item">
+                                    <a class="page-link" href="#" onclick="loadPage('@tableId', @totalPages); return false;">@totalPages</a>
+                                </li>
+                            }
+                            
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link" href="#" onclick="loadPage('@tableId', @(currentPage + 1)); return false;" aria-label="Próximo">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    }
+                    
+                    <div class="text-muted">
+                        @if (totalPages > 0)
+                        {
+                            <span>Página <strong>@currentPage</strong> de <strong>@totalPages</strong></span>
+                        }
+                    </div>
+                </div>
+            </nav>
+        }
+    </div>
+</div>

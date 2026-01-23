@@ -14,24 +14,45 @@ public class EmployeeService : IEmployeeService
         _context = context;
     }
 
-    public async Task<List<Employee>> GetAllEmployeesAsync()
+
+    public async Task<PagedResponse<Employee>> GetAllEmployeesAsync(int page, int pageSize)
     {
-        var employees = await _context.Employees
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
+        var query = _context.Employees
             .Where(e => e.IsDeleted == null || e.IsDeleted == false)
             .Include(e => e.Departament)
-            .AsSplitQuery()
-            .OrderBy(e => e.Name)
+            .OrderBy(e => e.Name);
+
+        var totalRecords = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+
+        var data = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
-        
-        foreach (var employee in employees)
+
+        foreach (var employee in data)
         {
             if (employee.Departament != null)
             {
                 employee.Departament.Employees = new List<Employee>();
             }
         }
-        
-        return employees;
+
+        var itemsInPage = data.Count;
+
+        return new PagedResponse<Employee>
+        {
+            Data = data,
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalRecords = totalRecords,
+            TotalPages = totalPages,
+            ItemsInPage = itemsInPage
+        };
     }
 
     public async Task<Employee?> GetEmployeeByIdAsync(int id)
