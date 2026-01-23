@@ -1,0 +1,50 @@
+<div class="modal fade" id="employeeModal" tabindex="-1" aria-labelledby="employeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="employeeModalLabel">Novo Colaborador</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form id="employeeForm" novalidate>
+                <div class="modal-body">
+                    <input type="hidden" id="employeeId" />
+                    
+                    <div class="mb-3">
+                        <label for="employeeName" class="form-label">Nome <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="employeeName" required maxlength="150">
+                        <div class="invalid-feedback">
+                            Por favor, informe o nome do colaborador.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="employeeCPF" class="form-label">CPF <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="employeeCPF" required maxlength="11" placeholder="Apenas números">
+                        <div class="invalid-feedback">
+                            Por favor, informe um CPF válido (11 dígitos).
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="employeeRG" class="form-label">RG</label>
+                        <input type="text" class="form-control" id="employeeRG" maxlength="20">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="employeeDepartmentId" class="form-label">Departamento</label>
+                        <select class="form-select" id="employeeDepartmentId">
+                            <option value="">Selecione um departamento (opcional)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveEmployeeBtn">
+                        <span class="spinner-border spinner-border-sm d-none" id="saveEmployeeSpinner" role="status" aria-hidden="true"></span>
+                        <span id="saveEmployeeText">Salvar</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

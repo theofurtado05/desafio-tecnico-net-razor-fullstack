@@ -33,12 +33,18 @@ public class ApplicationDbContext : DbContext
                 .HasColumnName("cpf")
                 .HasColumnType("CHAR(11)")
                 .IsRequired();
-            entity.HasIndex(e => e.CPF).IsUnique();
+            
+            entity.HasIndex(e => e.CPF)
+                .IsUnique()
+                .HasFilter("\"is_deleted\" = false OR \"is_deleted\" IS NULL");
 
             entity.Property(e => e.Rg)
                 .HasColumnName("rg")
                 .HasMaxLength(20);
-            entity.HasIndex(e => e.Rg).IsUnique();
+            
+            entity.HasIndex(e => e.Rg)
+                .IsUnique()
+                .HasFilter("\"is_deleted\" = false OR \"is_deleted\" IS NULL");
 
             entity.Property(e => e.DepartmentId)
                 .HasColumnName("departament_id");

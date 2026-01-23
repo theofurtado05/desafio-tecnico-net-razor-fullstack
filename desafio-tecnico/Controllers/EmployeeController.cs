@@ -25,6 +25,12 @@ public class EmployeeController : Controller
         return View();
     }
 
+    public IActionResult Details(int id)
+    {
+        ViewBag.EmployeeId = id;
+        return View();
+    }
+
     [HttpGet("api/employees")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [ProducesResponseType(StatusCodes.Status200OK)]

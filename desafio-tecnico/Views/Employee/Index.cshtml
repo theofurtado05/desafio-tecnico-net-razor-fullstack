@@ -2,3 +2,471 @@
     ViewData["Title"] = "Colaboradores";
 }
 
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex flex-column gap-2">
+            <h1 class="mb-0 fw-bold">Colaboradores</h1>
+            <p class="mt-0 text-muted">Carregando...</p>
+        </div>
+        <button class="btn btn-primary" onclick="openEmployeeModal('create')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+            </svg>
+            Criar Colaborador
+        </button>
+    </div>
+
+    @{
+        ViewBag.Columns = new List<string> { "Nome", "CPF", "RG", "Departamento" };
+        ViewBag.TableId = "employeeTable";
+        ViewBag.ApiUrl = "/api/employees";
+    }
+
+    @await Html.PartialAsync("_PagedTable", new {
+        Data = new List<object>(),
+        CurrentPage = 1,
+        PageSize = 10,
+        TotalRecords = 0,
+        TotalPages = 0,
+        ItemsInPage = 0
+    })
+</div>
+
+@await Html.PartialAsync("_EmployeeModal")
+
+@section Scripts {
+    <script src="~/js/pagedTable.js"></script>
+    <script>
+        if (typeof renderTableData === 'undefined') {
+            console.warn('Aguardando carregamento de pagedTable.js...');
+        }
+
+        const apiUrl = '/api/employees';
+        let currentPage = 1;
+        const pageSize = 10;
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatCPF(cpf) {
+            if (!cpf) return '';
+            return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        }
+
+        async function loadEmployees(page = 1) {
+            try {
+                currentPage = page;
+                const response = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const pagedData = await response.json();
+
+                const totalRecordsElement = document.querySelector('.d-flex.flex-column.gap-2 p');
+                if (totalRecordsElement) {
+                    totalRecordsElement.textContent = `${pagedData.totalRecords} colaborador(es) cadastrado(s)`;
+                }
+
+                if (typeof renderTableData === 'function') {
+                    renderTableData('employeeTable', pagedData.data, (item) => {
+                    return `
+                        <td>${escapeHtml(item.name || '')}</td>
+                        <td>${formatCPF(item.cpf || '')}</td>
+                        <td>${escapeHtml(item.rg || '-')}</td>
+                        <td>${escapeHtml(item.departament?.name || 'Sem departamento')}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-info me-1" onclick="viewEmployee(${item.id})" title="Ver detalhes">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editEmployee(${item.id})" title="Editar">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.293a.5.5 0 0 1-.353-.146l-.854-.854z"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployee(${item.id})" title="Excluir">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                </svg>
+                            </button>
+                        </td>
+                    `;
+                    });
+                } else {
+                    console.error('Função renderTableData não encontrada. Verifique se pagedTable.js está carregado.');
+                }
+
+                updatePagination(pagedData);
+            } catch (error) {
+                console.error('Erro ao carregar colaboradores:', error);
+                const pagedData = {
+                    data: [],
+                    currentPage: currentPage,
+                    pageSize: pageSize,
+                    totalRecords: 0,
+                    totalPages: 0,
+                    itemsInPage: 0
+                };
+                if (typeof renderTableData === 'function') {
+                    renderTableData('employeeTable', [], () => '');
+                }
+                updatePagination(pagedData);
+            }
+        }
+
+        function updatePagination(pagedData) {
+            const cardBody = document.querySelector('#employeeTable').closest('.card-body');
+            if (!cardBody) return;
+
+            let nav = cardBody.querySelector('nav');
+            if (!nav) {
+                nav = document.createElement('nav');
+                nav.setAttribute('aria-label', 'Paginação');
+                const tableContainer = cardBody.querySelector('.table-responsive');
+                if (tableContainer) {
+                    tableContainer.after(nav);
+                } else {
+                    cardBody.appendChild(nav);
+                }
+            }
+
+            if (pagedData.totalPages <= 1 && pagedData.totalRecords === 0) {
+                nav.style.display = 'none';
+                return;
+            }
+
+            nav.style.display = 'block';
+            
+            let paginationDiv = nav.querySelector('.d-flex');
+            if (!paginationDiv) {
+                paginationDiv = document.createElement('div');
+                paginationDiv.className = 'd-flex justify-content-between align-items-center mt-3 flex-wrap gap-2';
+                nav.appendChild(paginationDiv);
+            }
+
+            const startPage = Math.max(1, pagedData.currentPage - 2);
+            const endPage = Math.min(pagedData.totalPages, pagedData.currentPage + 2);
+
+            let paginationHTML = `
+                <div class="text-muted">
+                    ${pagedData.totalRecords > 0 
+                        ? `Mostrando <strong>${(pagedData.currentPage - 1) * pagedData.pageSize + 1}</strong> a <strong>${(pagedData.currentPage - 1) * pagedData.pageSize + pagedData.itemsInPage}</strong> de <strong>${pagedData.totalRecords}</strong> registros`
+                        : 'Nenhum registro encontrado'}
+                </div>
+            `;
+
+            if (pagedData.totalPages > 1) {
+                paginationHTML += `
+                    <ul class="pagination mb-0">
+                        <li class="page-item ${pagedData.currentPage === 1 ? 'disabled' : ''}">
+                            <a class="page-link" href="#" onclick="loadPage('employeeTable', ${pagedData.currentPage - 1}); return false;" aria-label="Anterior">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                `;
+
+                if (startPage > 1) {
+                    paginationHTML += `
+                        <li class="page-item">
+                            <a class="page-link" href="#" onclick="loadPage('employeeTable', 1); return false;">1</a>
+                        </li>
+                    `;
+                    if (startPage > 2) {
+                        paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                    }
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    paginationHTML += `
+                        <li class="page-item ${i === pagedData.currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="loadPage('employeeTable', ${i}); return false;">${i}</a>
+                        </li>
+                    `;
+                }
+
+                if (endPage < pagedData.totalPages) {
+                    if (endPage < pagedData.totalPages - 1) {
+                        paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                    }
+                    paginationHTML += `
+                        <li class="page-item">
+                            <a class="page-link" href="#" onclick="loadPage('employeeTable', ${pagedData.totalPages}); return false;">${pagedData.totalPages}</a>
+                        </li>
+                    `;
+                }
+
+                paginationHTML += `
+                        <li class="page-item ${pagedData.currentPage === pagedData.totalPages ? 'disabled' : ''}">
+                            <a class="page-link" href="#" onclick="loadPage('employeeTable', ${pagedData.currentPage + 1}); return false;" aria-label="Próximo">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                `;
+            }
+
+            paginationHTML += `
+                <div class="text-muted">
+                    ${pagedData.totalPages > 0 ? `Página <strong>${pagedData.currentPage}</strong> de <strong>${pagedData.totalPages}</strong>` : ''}
+                </div>
+            `;
+
+            paginationDiv.innerHTML = paginationHTML;
+        }
+
+        let currentEditId = null;
+
+        async function openEmployeeModal(mode, id = null) {
+            const modalElement = document.getElementById('employeeModal');
+            if (!modalElement) {
+                console.error('Modal não encontrado');
+                return;
+            }
+
+            currentEditId = id;
+            const modal = new bootstrap.Modal(modalElement);
+            const modalTitle = document.getElementById('employeeModalLabel');
+            const form = document.getElementById('employeeForm');
+
+            if (!form) {
+                console.error('Formulário não encontrado');
+                return;
+            }
+
+            form.reset();
+            const employeeIdInput = document.getElementById('employeeId');
+            if (employeeIdInput) {
+                employeeIdInput.value = '';
+            }
+
+            form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            
+            if (mode === 'create') {
+                modalTitle.textContent = 'Novo Colaborador';
+                document.getElementById('saveEmployeeText').textContent = 'Salvar';
+            } else {
+                modalTitle.textContent = 'Editar Colaborador';
+                document.getElementById('saveEmployeeText').textContent = 'Atualizar';
+                
+                try {
+                    const response = await fetch(`${apiUrl}/${id}`);
+                    if (response.ok) {
+                        const employee = await response.json();
+                        document.getElementById('employeeId').value = employee.id;
+                        document.getElementById('employeeName').value = employee.name || '';
+                        document.getElementById('employeeCPF').value = employee.cpf || '';
+                        document.getElementById('employeeRG').value = employee.rg || '';
+                        document.getElementById('employeeDepartmentId').value = employee.departmentId ? employee.departmentId.toString() : '';
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar colaborador:', error);
+                }
+            }
+
+            await loadModalSelects();
+            
+            modal.show();
+        }
+
+        async function loadModalSelects() {
+            try {
+                const departamentsResponse = await fetch('/api/departaments?page=1&pageSize=1000');
+                if (departamentsResponse.ok) {
+                    const departamentsData = await departamentsResponse.json();
+                    const departmentSelect = document.getElementById('employeeDepartmentId');
+                    const currentValue = departmentSelect.value;
+                    
+                    departmentSelect.innerHTML = '<option value="">Selecione um departamento (opcional)</option>';
+                    
+                    departamentsData.data.forEach(departament => {
+                        const option = document.createElement('option');
+                        option.value = departament.id;
+                        option.textContent = departament.name;
+                        if (departament.id.toString() === currentValue) {
+                            option.selected = true;
+                        }
+                        departmentSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar departamentos:', error);
+            }
+        }
+
+        async function saveEmployee() {
+            const form = document.getElementById('employeeForm');
+            if (!form) {
+                console.error('Formulário não encontrado');
+                return;
+            }
+
+            const saveBtn = document.getElementById('saveEmployeeBtn');
+            const spinner = document.getElementById('saveEmployeeSpinner');
+            const saveText = document.getElementById('saveEmployeeText');
+
+            const cpfInput = document.getElementById('employeeCPF');
+            const cpfValue = cpfInput.value.replace(/\D/g, '');
+            
+            if (cpfValue.length !== 11) {
+                cpfInput.setCustomValidity('CPF deve ter 11 dígitos');
+                form.classList.add('was-validated');
+                cpfInput.reportValidity();
+                return;
+            } else {
+                cpfInput.setCustomValidity('');
+            }
+
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+            
+            const employeeId = document.getElementById('employeeId').value;
+            const isEdit = employeeId !== '';
+            
+            const departmentIdValue = document.getElementById('employeeDepartmentId').value;
+            
+            const data = {
+                name: document.getElementById('employeeName').value.trim(),
+                cpf: cpfValue,
+                rg: document.getElementById('employeeRG').value.trim() || null,
+                departmentId: departmentIdValue === '' ? 0 : parseInt(departmentIdValue)
+            };
+
+            saveBtn.disabled = true;
+            spinner.classList.remove('d-none');
+            saveText.textContent = 'Salvando...';
+            
+            try {
+                const url = isEdit ? `${apiUrl}/${employeeId}` : apiUrl;
+                const method = isEdit ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { message: text || 'Erro desconhecido' };
+                }
+                
+                if (response.ok) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('employeeModal'));
+                    modal.hide();
+                    
+                    loadEmployees(currentPage);
+
+                    alert(isEdit ? 'Colaborador atualizado com sucesso!' : 'Colaborador criado com sucesso!');
+                } else {
+                    const errorMessage = result.message || result.title || 'Erro ao salvar colaborador';
+                    alert(errorMessage);
+                }
+            } catch (error) {
+                console.error('Erro ao salvar colaborador:', error);
+                alert('Erro ao salvar colaborador. Tente novamente.');
+            } finally {
+                saveBtn.disabled = false;
+                spinner.classList.add('d-none');
+                saveText.textContent = isEdit ? 'Atualizar' : 'Salvar';
+            }
+        }
+
+        function viewEmployee(id) {
+            window.location.href = `/Employee/Details/${id}`;
+        }
+
+        function editEmployee(id) {
+            openEmployeeModal('edit', id);
+        }
+
+        function deleteEmployee(id) {
+            if (confirm('Tem certeza que deseja excluir este colaborador?')) {
+                fetch(`${apiUrl}/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        loadEmployees(currentPage);
+                    } else {
+                        response.json().then(data => {
+                            alert(data.message || 'Erro ao excluir colaborador');
+                        }).catch(() => {
+                            alert('Erro ao excluir colaborador');
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao excluir colaborador');
+                });
+            }
+        }
+        
+        window.addEventListener('pagedTable:loadPage', (event) => {
+            if (event.detail.tableId === 'employeeTable') {
+                loadEmployees(event.detail.page);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                setTimeout(() => {
+                    loadEmployees(1);
+                }, 100);
+                
+                const saveBtn = document.getElementById('saveEmployeeBtn');
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', saveEmployee);
+                } else {
+                    console.warn('Botão saveEmployeeBtn não encontrado');
+                }
+                
+                const cpfInput = document.getElementById('employeeCPF');
+                if (cpfInput) {
+                    cpfInput.addEventListener('input', (e) => {
+                        e.target.value = e.target.value.replace(/\D/g, '');
+                    });
+                }
+                
+                const employeeModal = document.getElementById('employeeModal');
+                if (employeeModal) {
+                    employeeModal.addEventListener('hidden.bs.modal', () => {
+                        const form = document.getElementById('employeeForm');
+                        if (form) {
+                            form.reset();
+                            form.classList.remove('was-validated');
+                            const employeeIdInput = document.getElementById('employeeId');
+                            if (employeeIdInput) {
+                                employeeIdInput.value = '';
+                            }
+                            currentEditId = null;
+                        }
+                    });
+                } else {
+                    console.warn('Modal employeeModal não encontrado');
+                }
+            } catch (error) {
+                console.error('Erro ao inicializar página:', error);
+            }
+        });
+    </script>
+}
